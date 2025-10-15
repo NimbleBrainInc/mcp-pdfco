@@ -1,5 +1,10 @@
 # PDF.co MCP Server
 
+MCP Server - Abstract
+NimbleTools Registry NimbleBrain Platform Discord
+
+Python 3.13+ License: MIT CI
+
 MCP server for PDF.co API. Comprehensive PDF manipulation, conversion, OCR, text extraction, and document automation with support for barcodes, watermarks, and security features.
 
 ## Features
