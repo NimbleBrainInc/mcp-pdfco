@@ -3,7 +3,7 @@ name = "mcp-pdfco"
 version = "1.0.0"
 description = "PDF.co MCP Server with comprehensive PDF manipulation and OpenAPI support"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.12.15",
     "fastapi>=0.117.1",
