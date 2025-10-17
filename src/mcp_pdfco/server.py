@@ -6,27 +6,17 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import ResourceLink
 
 from .api_client import PDFcoAPIError, PDFcoClient
 from .api_models import (
     BarcodeGenerateResponse,
     BarcodeReadResponse,
-    HTMLToPDFResponse,
-    ImageToPDFResponse,
-    OCRPDFResponse,
-    PDFCompressResponse,
     PDFInfoResponse,
-    PDFMergeResponse,
-    PDFProtectResponse,
-    PDFRotateResponse,
-    PDFSplitResponse,
     PDFToCSVResponse,
     PDFToHTMLResponse,
     PDFToJSONResponse,
     PDFToTextResponse,
-    PDFUnlockResponse,
-    PDFWatermarkResponse,
-    URLToPDFResponse,
 )
 
 # Create MCP server
@@ -36,13 +26,13 @@ mcp = FastMCP("PDFco")
 _client: PDFcoClient | None = None
 
 
-def get_client(ctx: Context[Any, Any, Any]) -> PDFcoClient:
+async def get_client(ctx: Context[Any, Any, Any]) -> PDFcoClient:
     """Get or create the API client instance."""
     global _client
     if _client is None:
         api_key = os.environ.get("PDFCO_API_KEY")
         if not api_key:
-            ctx.warning(
+            await ctx.warning(
                 "PDFCO_API_KEY is not set - API calls will fail. "
                 "Get your API key from https://app.pdf.co/dashboard"
             )
@@ -76,11 +66,11 @@ async def pdf_to_text(
     Returns:
         PDFToTextResponse with extracted text content
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         return await client.pdf_to_text(url, pages, async_mode)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to text conversion failed: {e.message}")
+        await ctx.error(f"PDF to text conversion failed: {e.message}")
         raise
 
 
@@ -100,11 +90,11 @@ async def pdf_to_json(
     Returns:
         PDFToJSONResponse with structured data
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         return await client.pdf_to_json(url, pages)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to JSON conversion failed: {e.message}")
+        await ctx.error(f"PDF to JSON conversion failed: {e.message}")
         raise
 
 
@@ -126,11 +116,11 @@ async def pdf_to_html(
     Returns:
         PDFToHTMLResponse with HTML content
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         return await client.pdf_to_html(url, pages, simple)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to HTML conversion failed: {e.message}")
+        await ctx.error(f"PDF to HTML conversion failed: {e.message}")
         raise
 
 
@@ -150,11 +140,11 @@ async def pdf_to_csv(
     Returns:
         PDFToCSVResponse with CSV content
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         return await client.pdf_to_csv(url, pages)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to CSV conversion failed: {e.message}")
+        await ctx.error(f"PDF to CSV conversion failed: {e.message}")
         raise
 
 
@@ -164,7 +154,7 @@ async def pdf_merge(
     name: str = "merged.pdf",
     async_mode: bool = False,
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFMergeResponse:
+) -> ResourceLink:
     """Merge multiple PDFs into one.
 
     Args:
@@ -174,13 +164,23 @@ async def pdf_merge(
         ctx: MCP context
 
     Returns:
-        PDFMergeResponse with merged PDF URL
+        ResourceLink to the merged PDF with pageCount in meta
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_merge(urls, name, async_mode)
+        response = await client.pdf_merge(urls, name, async_mode)
+        meta: dict[str, Any] = {}
+        if response.pageCount:
+            meta["pageCount"] = response.pageCount
+        return ResourceLink(
+            type="resource_link",
+            name=name,
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf",
+            _meta=meta if meta else None
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF merge failed: {e.message}")
+        await ctx.error(f"PDF merge failed: {e.message}")
         raise
 
 
@@ -190,7 +190,7 @@ async def pdf_split(
     pages: str | None = None,
     split_by_pages: bool = False,
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFSplitResponse:
+) -> list[ResourceLink]:
     """Split PDF into separate pages or ranges.
 
     Args:
@@ -200,13 +200,23 @@ async def pdf_split(
         ctx: MCP context
 
     Returns:
-        PDFSplitResponse with URLs to split PDF files
+        List of ResourceLinks to the split PDF files
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_split(url, pages, split_by_pages)
+        response = await client.pdf_split(url, pages, split_by_pages)
+        resources = []
+        if response.urls:
+            for idx, pdf_url in enumerate(response.urls, 1):
+                resources.append(ResourceLink(
+                    type="resource_link",
+                    name=f"split-{idx}.pdf",
+                    uri=pdf_url,  # type: ignore[arg-type]
+                    mimeType="application/pdf"
+                ))
+        return resources
     except PDFcoAPIError as e:
-        ctx.error(f"PDF split failed: {e.message}")
+        await ctx.error(f"PDF split failed: {e.message}")
         raise
 
 
@@ -224,11 +234,11 @@ async def pdf_info(
     Returns:
         PDFInfoResponse with PDF metadata
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         return await client.pdf_info(url)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF info retrieval failed: {e.message}")
+        await ctx.error(f"PDF info retrieval failed: {e.message}")
         raise
 
 
@@ -240,7 +250,7 @@ async def html_to_pdf(
     orientation: str = "Portrait",
     page_size: str = "Letter",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> HTMLToPDFResponse:
+) -> ResourceLink:
     """Convert HTML to PDF.
 
     Args:
@@ -252,13 +262,19 @@ async def html_to_pdf(
         ctx: MCP context
 
     Returns:
-        HTMLToPDFResponse with generated PDF URL
+        ResourceLink to the generated PDF
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.html_to_pdf(html, name, margins, orientation, page_size)
+        response = await client.html_to_pdf(html, name, margins, orientation, page_size)
+        return ResourceLink(
+            type="resource_link",
+            name=name,
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf"
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"HTML to PDF conversion failed: {e.message}")
+        await ctx.error(f"HTML to PDF conversion failed: {e.message}")
         raise
 
 
@@ -269,7 +285,7 @@ async def url_to_pdf(
     orientation: str = "Portrait",
     page_size: str = "Letter",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> URLToPDFResponse:
+) -> ResourceLink:
     """Convert web page URL to PDF.
 
     Args:
@@ -280,13 +296,23 @@ async def url_to_pdf(
         ctx: MCP context
 
     Returns:
-        URLToPDFResponse with generated PDF URL
+        ResourceLink to the generated PDF with pageCount in meta
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.url_to_pdf(url, name, orientation, page_size)
+        response = await client.url_to_pdf(url, name, orientation, page_size)
+        meta: dict[str, Any] = {}
+        if response.pageCount:
+            meta["pageCount"] = response.pageCount
+        return ResourceLink(
+            type="resource_link",
+            name=name,
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf",
+            _meta=meta if meta else None
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"URL to PDF conversion failed: {e.message}")
+        await ctx.error(f"URL to PDF conversion failed: {e.message}")
         raise
 
 
@@ -295,7 +321,7 @@ async def image_to_pdf(
     images: list[str],
     name: str = "images.pdf",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> ImageToPDFResponse:
+) -> ResourceLink:
     """Convert images to PDF.
 
     Args:
@@ -304,13 +330,23 @@ async def image_to_pdf(
         ctx: MCP context
 
     Returns:
-        ImageToPDFResponse with generated PDF URL
+        ResourceLink to the generated PDF with pageCount in meta
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.image_to_pdf(images, name)
+        response = await client.image_to_pdf(images, name)
+        meta: dict[str, Any] = {}
+        if response.pageCount:
+            meta["pageCount"] = response.pageCount
+        return ResourceLink(
+            type="resource_link",
+            name=name,
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf",
+            _meta=meta if meta else None
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"Image to PDF conversion failed: {e.message}")
+        await ctx.error(f"Image to PDF conversion failed: {e.message}")
         raise
 
 
@@ -326,7 +362,7 @@ async def pdf_add_watermark(
     pages: str = "0-",
     name: str = "watermarked.pdf",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFWatermarkResponse:
+) -> ResourceLink:
     """Add text watermark/annotation to PDF.
 
     Args:
@@ -342,15 +378,21 @@ async def pdf_add_watermark(
         ctx: MCP context
 
     Returns:
-        PDFWatermarkResponse with watermarked PDF URL
+        ResourceLink to the watermarked PDF
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_add_watermark(
+        response = await client.pdf_add_watermark(
             url, text, x, y, font_size, color, opacity, pages, name
         )
+        return ResourceLink(
+            type="resource_link",
+            name=name,
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf"
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF watermark failed: {e.message}")
+        await ctx.error(f"PDF watermark failed: {e.message}")
         raise
 
 
@@ -360,7 +402,7 @@ async def pdf_rotate(
     angle: int,
     pages: str | None = None,
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFRotateResponse:
+) -> ResourceLink:
     """Rotate PDF pages.
 
     Args:
@@ -370,13 +412,19 @@ async def pdf_rotate(
         ctx: MCP context
 
     Returns:
-        PDFRotateResponse with rotated PDF URL
+        ResourceLink to the rotated PDF
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_rotate(url, angle, pages)
+        response = await client.pdf_rotate(url, angle, pages)
+        return ResourceLink(
+            type="resource_link",
+            name="rotated.pdf",
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf"
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF rotation failed: {e.message}")
+        await ctx.error(f"PDF rotation failed: {e.message}")
         raise
 
 
@@ -385,7 +433,7 @@ async def pdf_compress(
     url: str,
     compression_level: str = "balanced",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFCompressResponse:
+) -> ResourceLink:
     """Compress PDF file size.
 
     Args:
@@ -394,13 +442,28 @@ async def pdf_compress(
         ctx: MCP context
 
     Returns:
-        PDFCompressResponse with compressed PDF URL and compression stats
+        ResourceLink to the compressed PDF with compression stats in meta
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_compress(url, compression_level)
+        response = await client.pdf_compress(url, compression_level)
+        meta: dict[str, Any] = {}
+        if response.originalSize:
+            meta["originalSize"] = response.originalSize
+        if response.compressedSize:
+            meta["compressedSize"] = response.compressedSize
+        if response.compressionRatio:
+            meta["compressionRatio"] = response.compressionRatio
+        return ResourceLink(
+            type="resource_link",
+            name="compressed.pdf",
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf",
+            size=int(response.compressedSize) if response.compressedSize else None,
+            _meta=meta if meta else None
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF compression failed: {e.message}")
+        await ctx.error(f"PDF compression failed: {e.message}")
         raise
 
 
@@ -412,7 +475,7 @@ async def pdf_protect(
     allow_print: bool = True,
     allow_copy: bool = False,
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFProtectResponse:
+) -> ResourceLink:
     """Add password protection to PDF.
 
     Args:
@@ -424,13 +487,19 @@ async def pdf_protect(
         ctx: MCP context
 
     Returns:
-        PDFProtectResponse with protected PDF URL
+        ResourceLink to the protected PDF
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_protect(url, owner_password, user_password, allow_print, allow_copy)
+        response = await client.pdf_protect(url, owner_password, user_password, allow_print, allow_copy)
+        return ResourceLink(
+            type="resource_link",
+            name="protected.pdf",
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf"
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF protection failed: {e.message}")
+        await ctx.error(f"PDF protection failed: {e.message}")
         raise
 
 
@@ -439,7 +508,7 @@ async def pdf_unlock(
     url: str,
     password: str,
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> PDFUnlockResponse:
+) -> ResourceLink:
     """Remove password from PDF.
 
     Args:
@@ -448,13 +517,19 @@ async def pdf_unlock(
         ctx: MCP context
 
     Returns:
-        PDFUnlockResponse with unlocked PDF URL
+        ResourceLink to the unlocked PDF
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.pdf_unlock(url, password)
+        response = await client.pdf_unlock(url, password)
+        return ResourceLink(
+            type="resource_link",
+            name="unlocked.pdf",
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf"
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF unlock failed: {e.message}")
+        await ctx.error(f"PDF unlock failed: {e.message}")
         raise
 
 
@@ -476,11 +551,11 @@ async def barcode_generate(
     Returns:
         BarcodeGenerateResponse with generated barcode image URL
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         return await client.barcode_generate(value, barcode_type, format)
     except PDFcoAPIError as e:
-        ctx.error(f"Barcode generation failed: {e.message}")
+        await ctx.error(f"Barcode generation failed: {e.message}")
         raise
 
 
@@ -500,14 +575,14 @@ async def barcode_read(
     Returns:
         BarcodeReadResponse with detected barcodes
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
         # If no types specified, use all common barcode types
         if barcode_types is None:
             barcode_types = ["QRCode", "Code128", "Code39", "EAN13", "EAN8", "UPCA", "UPCE"]
         return await client.barcode_read(url, barcode_types)
     except PDFcoAPIError as e:
-        ctx.error(f"Barcode reading failed: {e.message}")
+        await ctx.error(f"Barcode reading failed: {e.message}")
         raise
 
 
@@ -517,7 +592,7 @@ async def ocr_pdf(
     pages: str | None = None,
     lang: str = "eng",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
-) -> OCRPDFResponse:
+) -> ResourceLink:
     """OCR scanned PDFs to searchable text.
 
     Args:
@@ -527,15 +602,28 @@ async def ocr_pdf(
         ctx: MCP context
 
     Returns:
-        OCRPDFResponse with OCR'd PDF URL and extracted text
+        ResourceLink to the OCR'd PDF with extracted text and pageCount in meta
     """
-    client = get_client(ctx)
+    client = await get_client(ctx)
     try:
-        return await client.ocr_pdf(url, pages, lang)
+        response = await client.ocr_pdf(url, pages, lang)
+        meta: dict[str, Any] = {}
+        if response.text:
+            meta["text"] = response.text
+        if response.pageCount:
+            meta["pageCount"] = response.pageCount
+        return ResourceLink(
+            type="resource_link",
+            name="ocr.pdf",
+            uri=response.url,  # type: ignore[arg-type]
+            mimeType="application/pdf",
+            _meta=meta if meta else None
+        )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF OCR failed: {e.message}")
+        await ctx.error(f"PDF OCR failed: {e.message}")
         raise
 
 
 # Create ASGI application for uvicorn
 app = mcp.streamable_http_app()
+

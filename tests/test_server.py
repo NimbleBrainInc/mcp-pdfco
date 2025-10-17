@@ -117,13 +117,16 @@ class TestPDFManipulationTools:
             mock_response = MagicMock()
             mock_response.error = False
             mock_response.url = "http://example.com/merged.pdf"
+            mock_response.pageCount = 10
             mock_client.pdf_merge.return_value = mock_response
 
             urls = ["http://example.com/1.pdf", "http://example.com/2.pdf"]
             result = await pdf_merge(urls, ctx=mock_context)
 
-            assert result.error is False
-            assert result.url == "http://example.com/merged.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "merged.pdf"
+            assert str(result.uri) == "http://example.com/merged.pdf"
+            assert result.mimeType == "application/pdf"
             mock_client.pdf_merge.assert_called_once_with(urls, "merged.pdf", False)
 
     @pytest.mark.asyncio
@@ -134,13 +137,16 @@ class TestPDFManipulationTools:
             mock_get_client.return_value = mock_client
             mock_response = MagicMock()
             mock_response.error = False
-            mock_response.urls = ["http://example.com/page1.pdf"]
+            mock_response.urls = ["http://example.com/page1.pdf", "http://example.com/page2.pdf"]
             mock_client.pdf_split.return_value = mock_response
 
             result = await pdf_split("http://example.com/test.pdf", ctx=mock_context)
 
-            assert result.error is False
-            assert len(result.urls) == 1
+            assert isinstance(result, list)
+            assert len(result) == 2
+            assert result[0].type == "resource_link"
+            assert result[0].name == "split-1.pdf"
+            assert str(result[0].uri) == "http://example.com/page1.pdf"
 
     @pytest.mark.asyncio
     async def test_pdf_info(self, mock_context):
@@ -167,12 +173,20 @@ class TestPDFManipulationTools:
             mock_response = MagicMock()
             mock_response.error = False
             mock_response.url = "http://example.com/compressed.pdf"
+            mock_response.originalSize = 10000
+            mock_response.compressedSize = 5000
+            mock_response.compressionRatio = 50.0
             mock_client.pdf_compress.return_value = mock_response
 
             result = await pdf_compress("http://example.com/test.pdf", ctx=mock_context)
 
-            assert result.error is False
-            assert result.url == "http://example.com/compressed.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "compressed.pdf"
+            assert str(result.uri) == "http://example.com/compressed.pdf"
+            assert result.mimeType == "application/pdf"
+            assert result.size == 5000
+            assert result.meta["originalSize"] == 10000
+            assert result.meta["compressionRatio"] == 50.0
 
 
 class TestBarcodeTools:
@@ -227,8 +241,10 @@ class TestConversionTools:
 
             result = await html_to_pdf("<html>test</html>", ctx=mock_context)
 
-            assert result.error is False
-            assert result.url == "http://example.com/output.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "document.pdf"
+            assert str(result.uri) == "http://example.com/output.pdf"
+            assert result.mimeType == "application/pdf"
 
     @pytest.mark.asyncio
     async def test_url_to_pdf(self, mock_context):
@@ -239,12 +255,16 @@ class TestConversionTools:
             mock_response = MagicMock()
             mock_response.error = False
             mock_response.url = "http://example.com/webpage.pdf"
+            mock_response.pageCount = 5
             mock_client.url_to_pdf.return_value = mock_response
 
             result = await url_to_pdf("http://example.com", ctx=mock_context)
 
-            assert result.error is False
-            assert result.url == "http://example.com/webpage.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "webpage.pdf"
+            assert str(result.uri) == "http://example.com/webpage.pdf"
+            assert result.mimeType == "application/pdf"
+            assert result.meta["pageCount"] == 5
 
     @pytest.mark.asyncio
     async def test_image_to_pdf(self, mock_context):
@@ -255,13 +275,16 @@ class TestConversionTools:
             mock_response = MagicMock()
             mock_response.error = False
             mock_response.url = "http://example.com/images.pdf"
+            mock_response.pageCount = 1
             mock_client.image_to_pdf.return_value = mock_response
 
             images = ["http://example.com/img1.png"]
             result = await image_to_pdf(images, ctx=mock_context)
 
-            assert result.error is False
-            assert result.url == "http://example.com/images.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "images.pdf"
+            assert str(result.uri) == "http://example.com/images.pdf"
+            assert result.mimeType == "application/pdf"
 
 
 class TestSecurityTools:
@@ -280,8 +303,10 @@ class TestSecurityTools:
 
             result = await pdf_protect("http://example.com/test.pdf", "owner123", ctx=mock_context)
 
-            assert result.error is False
-            assert result.url == "http://example.com/protected.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "protected.pdf"
+            assert str(result.uri) == "http://example.com/protected.pdf"
+            assert result.mimeType == "application/pdf"
 
     @pytest.mark.asyncio
     async def test_pdf_unlock(self, mock_context):
@@ -298,5 +323,7 @@ class TestSecurityTools:
                 "http://example.com/test.pdf", "password123", ctx=mock_context
             )
 
-            assert result.error is False
-            assert result.url == "http://example.com/unlocked.pdf"
+            assert result.type == "resource_link"
+            assert result.name == "unlocked.pdf"
+            assert str(result.uri) == "http://example.com/unlocked.pdf"
+            assert result.mimeType == "application/pdf"
