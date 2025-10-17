@@ -31,9 +31,7 @@ from .api_models import (
 class PDFcoAPIError(Exception):
     """Custom exception for PDF.co API errors."""
 
-    def __init__(
-        self, status: int, message: str, details: dict[str, Any] | None = None
-    ) -> None:
+    def __init__(self, status: int, message: str, details: dict[str, Any] | None = None) -> None:
         self.status = status
         self.message = message
         self.details = details
@@ -102,9 +100,7 @@ class PDFcoClient:
             if not self._session:
                 raise RuntimeError("Session not initialized")
 
-            async with self._session.request(
-                method, url, params=params, **kwargs
-            ) as response:
+            async with self._session.request(method, url, params=params, **kwargs) as response:
                 content_type = response.headers.get("Content-Type", "")
 
                 if "application/json" in content_type:
@@ -136,9 +132,7 @@ class PDFcoClient:
                 # Check for API-level errors
                 if isinstance(result, dict) and result.get("error") is True:
                     error_msg = result.get("message", "API returned error flag")
-                    raise PDFcoAPIError(
-                        response.status or 500, error_msg, result
-                    )
+                    raise PDFcoAPIError(response.status or 500, error_msg, result)
 
                 return result  # type: ignore[no-any-return]
 
@@ -166,9 +160,7 @@ class PDFcoClient:
             async with self._session.get(url) as response:
                 if response.status >= 400:
                     raise PDFcoAPIError(
-                        response.status,
-                        f"Failed to fetch content from {url}",
-                        {"url": url}
+                        response.status, f"Failed to fetch content from {url}", {"url": url}
                     )
 
                 content_type = response.headers.get("Content-Type", "")
@@ -181,10 +173,7 @@ class PDFcoClient:
                     return await response.text()
 
         except ClientError as e:
-            raise PDFcoAPIError(
-                500,
-                f"Network error fetching content from {url}: {str(e)}"
-            ) from e
+            raise PDFcoAPIError(500, f"Network error fetching content from {url}: {str(e)}") from e
 
     async def pdf_to_text(
         self, url: str, pages: str | None = None, async_mode: bool = False
@@ -209,9 +198,7 @@ class PDFcoClient:
 
         return response
 
-    async def pdf_to_json(
-        self, url: str, pages: str | None = None
-    ) -> PDFToJSONResponse:
+    async def pdf_to_json(self, url: str, pages: str | None = None) -> PDFToJSONResponse:
         """Extract structured data from PDF."""
         payload: dict[str, Any] = {"url": url}
         if pages:
@@ -255,9 +242,7 @@ class PDFcoClient:
 
         return response
 
-    async def pdf_to_csv(
-        self, url: str, pages: str | None = None
-    ) -> PDFToCSVResponse:
+    async def pdf_to_csv(self, url: str, pages: str | None = None) -> PDFToCSVResponse:
         """Extract tables from PDF to CSV."""
         payload: dict[str, Any] = {"url": url}
         if pages:
@@ -325,9 +310,7 @@ class PDFcoClient:
         if margins:
             payload["margins"] = margins
 
-        data = await self._request(
-            "POST", "/pdf/convert/from/html", json_data=payload
-        )
+        data = await self._request("POST", "/pdf/convert/from/html", json_data=payload)
         return HTMLToPDFResponse(**data)
 
     async def url_to_pdf(
@@ -348,15 +331,11 @@ class PDFcoClient:
         data = await self._request("POST", "/pdf/convert/from/url", json_data=payload)
         return URLToPDFResponse(**data)
 
-    async def image_to_pdf(
-        self, images: list[str], name: str = "images.pdf"
-    ) -> ImageToPDFResponse:
+    async def image_to_pdf(self, images: list[str], name: str = "images.pdf") -> ImageToPDFResponse:
         """Convert images to PDF."""
         payload = {"url": ",".join(images), "name": name}
 
-        data = await self._request(
-            "POST", "/pdf/convert/from/image", json_data=payload
-        )
+        data = await self._request("POST", "/pdf/convert/from/image", json_data=payload)
         return ImageToPDFResponse(**data)
 
     async def pdf_add_watermark(
@@ -413,9 +392,7 @@ class PDFcoClient:
         data = await self._request("POST", "/pdf/edit/add", json_data=payload)
         return PDFWatermarkResponse(**data)
 
-    async def pdf_rotate(
-        self, url: str, angle: int, pages: str | None = None
-    ) -> PDFRotateResponse:
+    async def pdf_rotate(self, url: str, angle: int, pages: str | None = None) -> PDFRotateResponse:
         """Rotate PDF pages."""
         payload: dict[str, Any] = {"url": url, "angle": angle}
         if pages:

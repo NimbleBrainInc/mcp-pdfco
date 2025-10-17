@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CompressionLevel(str, Enum):
@@ -257,13 +257,17 @@ class BarcodeGenerateResponse(BaseModel):
 class BarcodeInfo(BaseModel):
     """Model for individual barcode detection result."""
 
-    type: str = Field(..., description="Barcode type (QRCode, Code128, etc.)")
-    value: str = Field(..., description="Decoded barcode value")
-    confidence: float | None = Field(None, description="Detection confidence score")
-    x: int | None = Field(None, description="X coordinate of barcode")
-    y: int | None = Field(None, description="Y coordinate of barcode")
-    width: int | None = Field(None, description="Width of barcode")
-    height: int | None = Field(None, description="Height of barcode")
+    model_config = ConfigDict(populate_by_name=True)
+
+    type: str = Field(..., alias="TypeName", description="Barcode type (QRCode, Code128, etc.)")
+    value: str = Field(..., alias="Value", description="Decoded barcode value")
+    confidence: float | None = Field(
+        None, alias="Confidence", description="Detection confidence score"
+    )
+    x: int | None = Field(None, alias="X", description="X coordinate of barcode")
+    y: int | None = Field(None, alias="Y", description="Y coordinate of barcode")
+    width: int | None = Field(None, alias="Width", description="Width of barcode")
+    height: int | None = Field(None, alias="Height", description="Height of barcode")
 
 
 class BarcodeReadResponse(BaseModel):

@@ -2,16 +2,12 @@
 
 [![NimbleTools Registry](https://img.shields.io/badge/NimbleTools-Registry-green)](https://github.com/nimbletoolsinc/mcp-registry)
 [![NimbleBrain Platform](https://img.shields.io/badge/NimbleBrain-Platform-blue)](https://www.nimblebrain.ai)
-<<<<<<< HEAD
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://www.nimblebrain.ai/discord?utm_source=github&utm_medium=readme&utm_campaign=mcp-pdfco&utm_content=discord-badge)
-=======
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://www.nimblebrain.ai/discord?utm_source=github&utm_medium=readme&utm_campaign=mcp-abstract&utm_content=discord-badge)
 
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/NimbleBrainInc/mcp-abstract/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-abstract/actions)
->>>>>>> 2942b6e (Update README with new badges and links)
+[![CI](https://github.com/NimbleBrainInc/mcp-pdfco/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-pdfco/actions)
 
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
@@ -416,26 +412,28 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 4. Run tests: `make check`
 5. Submit a pull request
 
+Issue Tracker: [GitHub Issues](https://github.com/your-org/mcp-pdfco/issues)
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Built with [FastMCP](https://github.com/jlowin/fastmcp)
-- Powered by [PDF.co API](https://pdf.co)
-- Follows [S-Tier MCP Architecture](ARCHITECTURE_PROMPT.md) patterns
+MIT
 
 ## Links
 
-- [PDF.co Website](https://pdf.co)
-- [PDF.co API Documentation](https://apidocs.pdf.co/)
-- [PDF.co Dashboard](https://app.pdf.co/dashboard)
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [FastMCP Documentation](https://github.com/jlowin/fastmcp)
+Part of the [NimbleTools Registry](https://github.com/nimbletoolsinc/mcp-registry) - an open source collection of production-ready MCP servers. For enterprise deployment, check out [NimbleBrain](https://www.nimblebrain.ai).
 
-## Support
+### API Documentation
 
-- Issue Tracker: [GitHub Issues](https://github.com/your-org/mcp-pdfco/issues)
-- API Support: support@pdf.co
-- Documentation: https://apidocs.pdf.co/
+- [PDF.co Documentation](https://apidocs.pdf.co/)
+- [PDF Operations](https://apidocs.pdf.co/02-pdf-to-text)
+- [Conversion APIs](https://apidocs.pdf.co/07-html-to-pdf)
+- [OCR API](https://apidocs.pdf.co/12-pdf-ocr)
+- [Barcode API](https://apidocs.pdf.co/24-barcode-generate)
+
+### Support
+
+- [Help Center](https://pdf.co/support)
+- [API Documentation](https://apidocs.pdf.co/)
+- [Contact Support](https://pdf.co/contact)
+- [Status Page](https://status.pdf.co/)
+- Built with [FastMCP](https://github.com/jlowin/fastmcp)

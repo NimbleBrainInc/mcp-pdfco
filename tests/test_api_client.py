@@ -1,6 +1,6 @@
 """Unit tests for the PDF.co API client."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -38,6 +38,7 @@ class TestPDFcoClient:
         """Test successful pdf_to_text call."""
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.headers = Mock()
         mock_response.headers.get.return_value = "application/json"
         mock_response.json.return_value = {
             "error": False,
@@ -59,6 +60,7 @@ class TestPDFcoClient:
         """Test successful pdf_to_json call."""
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.headers = Mock()
         mock_response.headers.get.return_value = "application/json"
         mock_response.json.return_value = {
             "error": False,
@@ -79,6 +81,7 @@ class TestPDFcoClient:
         """Test API error handling."""
         mock_response = AsyncMock()
         mock_response.status = 400
+        mock_response.headers = Mock()
         mock_response.headers.get.return_value = "application/json"
         mock_response.json.return_value = {"error": True, "message": "Bad request"}
 
@@ -96,6 +99,7 @@ class TestPDFcoClient:
         """Test pdf_merge method."""
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.headers = Mock()
         mock_response.headers.get.return_value = "application/json"
         mock_response.json.return_value = {
             "error": False,
@@ -117,6 +121,7 @@ class TestPDFcoClient:
         """Test barcode_generate method."""
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.headers = Mock()
         mock_response.headers.get.return_value = "application/json"
         mock_response.json.return_value = {
             "error": False,
@@ -136,6 +141,7 @@ class TestPDFcoClient:
         """Test pdf_compress method."""
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.headers = Mock()
         mock_response.headers.get.return_value = "application/json"
         mock_response.json.return_value = {
             "error": False,

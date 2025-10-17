@@ -1,7 +1,7 @@
 IMAGE_NAME = nimbletools/mcp-pdfco
-VERSION ?= latest
+VERSION ?= 1.0.0
 
-.PHONY: help install dev-install format lint test clean run check all
+.PHONY: help install dev-install format lint test clean run check all docker-build release docker-run test-e2e
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -33,6 +33,9 @@ test: ## Run tests with pytest
 test-cov: ## Run tests with coverage
 	uv run pytest tests/ -v --cov=src/mcp_pdfco --cov-report=term-missing
 
+test-e2e: ## Run end-to-end Docker tests
+	uv run pytest e2e/ -v -s
+
 clean: ## Clean up artifacts
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
@@ -48,6 +51,19 @@ run: ## Run the MCP server
 check: lint typecheck test ## Run all checks
 
 all: clean install format lint typecheck test ## Full workflow
+
+# Docker commands
+docker-build: ## Build Docker image locally
+	docker build -t $(IMAGE_NAME):$(VERSION) -t $(IMAGE_NAME):latest .
+
+docker-run: ## Run Docker container
+	docker run -e ABSTRACT_API_KEY=$(ABSTRACT_API_KEY) -p 8000:8000 $(IMAGE_NAME):$(VERSION)
+
+release: ## Build and push multi-platform Docker image
+	docker buildx build --platform linux/amd64,linux/arm64 \
+		-t $(IMAGE_NAME):$(VERSION) \
+		-t $(IMAGE_NAME):latest \
+		--push .
 
 # Aliases
 fmt: format

@@ -212,7 +212,8 @@ async def pdf_split(
 
 @mcp.tool()
 async def pdf_info(
-    url: str, ctx: Context[Any, Any, Any] = None  # type: ignore[assignment]
+    url: str,
+    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
 ) -> PDFInfoResponse:
     """Get PDF metadata (pages, size, etc.).
 
@@ -427,9 +428,7 @@ async def pdf_protect(
     """
     client = get_client(ctx)
     try:
-        return await client.pdf_protect(
-            url, owner_password, user_password, allow_print, allow_copy
-        )
+        return await client.pdf_protect(url, owner_password, user_password, allow_print, allow_copy)
     except PDFcoAPIError as e:
         ctx.error(f"PDF protection failed: {e.message}")
         raise
@@ -495,7 +494,7 @@ async def barcode_read(
 
     Args:
         url: Image URL or base64 encoded image
-        barcode_types: List of barcode types to detect (QRCode, Code128, etc.)
+        barcode_types: List of barcode types to detect (default: all common types)
         ctx: MCP context
 
     Returns:
@@ -503,6 +502,9 @@ async def barcode_read(
     """
     client = get_client(ctx)
     try:
+        # If no types specified, use all common barcode types
+        if barcode_types is None:
+            barcode_types = ["QRCode", "Code128", "Code39", "EAN13", "EAN8", "UPCA", "UPCE"]
         return await client.barcode_read(url, barcode_types)
     except PDFcoAPIError as e:
         ctx.error(f"Barcode reading failed: {e.message}")
@@ -537,4 +539,3 @@ async def ocr_pdf(
 
 # Create ASGI application for uvicorn
 app = mcp.streamable_http_app()
-

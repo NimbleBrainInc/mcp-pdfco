@@ -10,13 +10,10 @@ from mcp_pdfco.server import (
     barcode_read,
     html_to_pdf,
     image_to_pdf,
-    ocr_pdf,
-    pdf_add_watermark,
     pdf_compress,
     pdf_info,
     pdf_merge,
     pdf_protect,
-    pdf_rotate,
     pdf_split,
     pdf_to_csv,
     pdf_to_html,
@@ -73,9 +70,7 @@ class TestPDFConversionTools:
 
             assert result.error is False
             assert result.data == {"key": "value"}
-            mock_client.pdf_to_json.assert_called_once_with(
-                "http://example.com/test.pdf", None
-            )
+            mock_client.pdf_to_json.assert_called_once_with("http://example.com/test.pdf", None)
 
     @pytest.mark.asyncio
     async def test_pdf_to_html(self, mock_context):
@@ -283,9 +278,7 @@ class TestSecurityTools:
             mock_response.url = "http://example.com/protected.pdf"
             mock_client.pdf_protect.return_value = mock_response
 
-            result = await pdf_protect(
-                "http://example.com/test.pdf", "owner123", ctx=mock_context
-            )
+            result = await pdf_protect("http://example.com/test.pdf", "owner123", ctx=mock_context)
 
             assert result.error is False
             assert result.url == "http://example.com/protected.pdf"
