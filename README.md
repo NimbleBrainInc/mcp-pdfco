@@ -1,13 +1,31 @@
-# PDF.co MCP Server
+# MCP Server PDF.co
 
-MCP Server - Abstract
-NimbleTools Registry NimbleBrain Platform Discord
+[![NimbleTools Registry](https://img.shields.io/badge/NimbleTools-Registry-green)](https://github.com/nimbletoolsinc/mcp-registry)
+[![NimbleBrain Platform](https://img.shields.io/badge/NimbleBrain-Platform-blue)](https://www.nimblebrain.ai)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://www.nimblebrain.ai/discord?utm_source=github&utm_medium=readme&utm_campaign=mcp-pdfco&utm_content=discord-badge)
 
-Python 3.13+ License: MIT CI
 
-MCP server for PDF.co API. Comprehensive PDF manipulation, conversion, OCR, text extraction, and document automation with support for barcodes, watermarks, and security features.
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/NimbleBrainInc/mcp-pdfco/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-pdfco/actions)
+
+## About
+
+MCP server for PDF.co API. Comprehensive PDF manipulation, conversion, OCR,
+text extraction, and document automation with support for barcodes,
+watermarks, and security features.
 
 ## Features
+
+- **Full API Coverage**: Complete implementation of PDF.co API
+- **Strongly Typed**: All responses use Pydantic models for type safety
+- **HTTP Transport**: Supports streamable-http with health endpoint
+- **Async/Await**: Built on aiohttp for high performance
+- **Type Safe**: Full mypy strict mode compliance
+- **Comprehensive Testing**: Unit tests with pytest and AsyncMock
+- **Production Ready**: Docker support, health checks, monitoring
+
+### Capabilities
 
 - **Text Extraction**: Extract text from PDFs
 - **Format Conversion**: PDF ↔ HTML, images, CSV
@@ -20,25 +38,127 @@ MCP server for PDF.co API. Comprehensive PDF manipulation, conversion, OCR, text
 - **Barcode Operations**: Generate and read barcodes
 - **Web to PDF**: Convert URLs to PDF documents
 
-## Setup
+## Installation
 
-### Prerequisites
+### Using uv (recommended)
 
-- PDF.co account (free or paid)
-- API key
+```bash
+# Install dependencies
+uv pip install -e .
 
-### Environment Variables
+# Or with dev dependencies
+uv pip install -e ".[dev]"
+```
 
-- `PDFCO_API_KEY` (required): Your PDF.co API key
+### Using pip
+
+```bash
+pip install -e .
+```
+
+## Configuration
+
+Set your API token:
+
+```bash
+export PDFCO_API_KEY=your_token_here
+```
 
 **How to get credentials:**
 1. Go to [pdf.co](https://pdf.co/)
 2. Sign up or log in
-3. Go to Dashboard (app.pdf.co/dashboard)
+3. Go to Dashboard: https://app.pdf.co/dashboard
 4. Find your API key in the API section
-5. Copy the key and store as `PDFCO_API_KEY`
+5. Copy the key and set as `PDFCO_API_KEY`
 
-Direct link: https://app.pdf.co/dashboard
+## Running the Server
+
+### Development
+
+```bash
+# Run directly
+uv run python -m mcp_pdfco.server
+
+# Or use Makefile
+make run
+```
+
+### Production (Docker)
+
+```bash
+# Build image
+docker build -t mcp-pdfco .
+
+# Run container
+docker run -e PDFCO_API_KEY=xxx -p 8000:8000 mcp-pdfco
+```
+
+### Health Check
+
+The server exposes a health endpoint:
+
+```bash
+curl http://localhost:8000/health
+# Returns: {"status": "healthy", "service": "mcp-pdfco"}
+```
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Install with dev dependencies
+uv pip install -e ".[dev]"
+
+# Or use Make
+make dev-install
+```
+
+### Available Commands
+
+```bash
+make help          # Show all commands
+make install       # Install dependencies
+make format        # Format code with ruff
+make lint          # Lint code
+make lint-fix      # Lint and fix code
+make typecheck     # Type check with mypy
+make test          # Run tests
+make test-cov      # Run tests with coverage
+make check         # Run all checks (lint + typecheck + test)
+make clean         # Clean up artifacts
+make run           # Run the server
+```
+
+## Architecture
+
+This server follows S-Tier MCP architecture patterns:
+
+### Directory Structure
+
+```
+.
+├── src/
+│   └── mcp_pdfco/
+│       ├── __init__.py
+│       ├── server.py          # FastMCP server with tool definitions
+│       ├── api_client.py      # Dedicated async API client class
+│       └── api_models.py      # Pydantic models for type safety
+├── tests/
+│   ├── __init__.py
+│   ├── test_server.py         # Server tool tests
+│   └── test_api_client.py     # API client tests
+├── pyproject.toml             # Project config with uv, ruff, mypy
+├── Makefile                   # Development workflow commands
+├── Dockerfile                 # Container deployment
+└── pytest.ini                 # Pytest configuration
+```
+
+### Key Components
+
+1. **API Client Layer** (`api_client.py`): Encapsulates all HTTP communication in a dedicated async client class using aiohttp
+2. **Data Models Layer** (`api_models.py`): Provides strong typing and validation using Pydantic BaseModel
+3. **Server Layer** (`server.py`): Defines MCP tools using FastMCP with context injection and error handling
 
 ## Rate Limits
 
@@ -711,6 +831,19 @@ job_id = result["jobId"]
 # Check status (implement polling)
 # GET /v1/job/check/{job_id}
 ```
+
+
+## Support
+
+For issues, questions, or contributions, please open an issue on GitHub.
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Links
+
+Part of the [NimbleTools Registry](https://github.com/nimbletoolsinc/mcp-registry) - an open source collection of production-ready MCP servers. For enterprise deployment, check out [NimbleBrain](https://www.nimblebrain.ai).
 
 ## API Documentation
 
