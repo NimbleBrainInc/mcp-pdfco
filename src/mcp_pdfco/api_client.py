@@ -145,6 +145,47 @@ class PDFcoClient:
         except ClientError as e:
             raise PDFcoAPIError(500, f"Network error: {str(e)}") from e
 
+    async def _fetch_content(self, url: str) -> str | dict[str, Any]:
+        """Fetch content from a URL (typically an S3 URL returned by PDF.co).
+
+        Args:
+            url: The URL to fetch content from
+
+        Returns:
+            The content as a string or parsed JSON dict
+
+        Raises:
+            PDFcoAPIError: If fetching fails
+        """
+        await self._ensure_session()
+
+        try:
+            if not self._session:
+                raise RuntimeError("Session not initialized")
+
+            async with self._session.get(url) as response:
+                if response.status >= 400:
+                    raise PDFcoAPIError(
+                        response.status,
+                        f"Failed to fetch content from {url}",
+                        {"url": url}
+                    )
+
+                content_type = response.headers.get("Content-Type", "")
+
+                # If it's JSON, parse it
+                if "application/json" in content_type:
+                    return await response.json()  # type: ignore[no-any-return]
+                else:
+                    # Return as text for HTML, CSV, plain text
+                    return await response.text()
+
+        except ClientError as e:
+            raise PDFcoAPIError(
+                500,
+                f"Network error fetching content from {url}: {str(e)}"
+            ) from e
+
     async def pdf_to_text(
         self, url: str, pages: str | None = None, async_mode: bool = False
     ) -> PDFToTextResponse:
@@ -154,7 +195,19 @@ class PDFcoClient:
             payload["pages"] = pages
 
         data = await self._request("POST", "/pdf/convert/to/text", json_data=payload)
-        return PDFToTextResponse(**data)
+        response = PDFToTextResponse(**data)
+
+        # If API returned a URL but no text content, fetch it
+        if response.url and not response.text and not response.error:
+            try:
+                content = await self._fetch_content(response.url)
+                if isinstance(content, str):
+                    response.text = content
+            except PDFcoAPIError:
+                # If fetching fails, leave the URL for the user to fetch manually
+                pass
+
+        return response
 
     async def pdf_to_json(
         self, url: str, pages: str | None = None
@@ -165,7 +218,19 @@ class PDFcoClient:
             payload["pages"] = pages
 
         data = await self._request("POST", "/pdf/convert/to/json", json_data=payload)
-        return PDFToJSONResponse(**data)
+        response = PDFToJSONResponse(**data)
+
+        # If API returned a URL but no data content, fetch it
+        if response.url and not response.data and not response.error:
+            try:
+                content = await self._fetch_content(response.url)
+                if isinstance(content, dict):
+                    response.data = content
+            except PDFcoAPIError:
+                # If fetching fails, leave the URL for the user to fetch manually
+                pass
+
+        return response
 
     async def pdf_to_html(
         self, url: str, pages: str | None = None, simple: bool = False
@@ -176,7 +241,19 @@ class PDFcoClient:
             payload["pages"] = pages
 
         data = await self._request("POST", "/pdf/convert/to/html", json_data=payload)
-        return PDFToHTMLResponse(**data)
+        response = PDFToHTMLResponse(**data)
+
+        # If API returned a URL but no html content, fetch it
+        if response.url and not response.html and not response.error:
+            try:
+                content = await self._fetch_content(response.url)
+                if isinstance(content, str):
+                    response.html = content
+            except PDFcoAPIError:
+                # If fetching fails, leave the URL for the user to fetch manually
+                pass
+
+        return response
 
     async def pdf_to_csv(
         self, url: str, pages: str | None = None
@@ -187,7 +264,19 @@ class PDFcoClient:
             payload["pages"] = pages
 
         data = await self._request("POST", "/pdf/convert/to/csv", json_data=payload)
-        return PDFToCSVResponse(**data)
+        response = PDFToCSVResponse(**data)
+
+        # If API returned a URL but no csv content, fetch it
+        if response.url and not response.csv and not response.error:
+            try:
+                content = await self._fetch_content(response.url)
+                if isinstance(content, str):
+                    response.csv = content
+            except PDFcoAPIError:
+                # If fetching fails, leave the URL for the user to fetch manually
+                pass
+
+        return response
 
     async def pdf_merge(
         self, urls: list[str], name: str = "merged.pdf", async_mode: bool = False
@@ -279,19 +368,49 @@ class PDFcoClient:
         font_size: int = 24,
         color: str = "FF0000",
         opacity: float = 0.5,
+        pages: str = "0-",
+        name: str = "watermarked.pdf",
     ) -> PDFWatermarkResponse:
-        """Add text watermark to PDF."""
+        """Add text watermark/annotation to PDF using the PDF Edit Add endpoint.
+
+        Args:
+            url: URL to the source PDF file
+            text: Text to add as watermark
+            x: X coordinate position
+            y: Y coordinate position
+            font_size: Font size for the text
+            color: Hex color code without # (e.g., FF0000 for red)
+            opacity: Opacity value 0.0-1.0 (will be converted to alpha channel)
+            pages: Page range (default: "0-" for all pages)
+            name: Output filename (default: "watermarked.pdf")
+
+        Returns:
+            PDFWatermarkResponse with URL to the watermarked PDF
+        """
+        # Convert opacity (0.0-1.0) to alpha channel (00-FF)
+        # PDF.co uses AARRGGBB format where AA is the alpha channel
+        alpha = int(opacity * 255)
+        alpha_hex = f"{alpha:02X}"
+
+        # Combine alpha with color to create AARRGGBB format
+        color_with_alpha = f"{alpha_hex}{color}"
+
         payload = {
             "url": url,
-            "text": text,
-            "x": x,
-            "y": y,
-            "fontSize": font_size,
-            "color": color,
-            "opacity": opacity,
+            "name": name,
+            "annotations": [
+                {
+                    "text": text,
+                    "x": x,
+                    "y": y,
+                    "size": font_size,
+                    "color": color_with_alpha,
+                    "pages": pages,
+                }
+            ],
         }
 
-        data = await self._request("POST", "/pdf/edit/add-text", json_data=payload)
+        data = await self._request("POST", "/pdf/edit/add", json_data=payload)
         return PDFWatermarkResponse(**data)
 
     async def pdf_rotate(

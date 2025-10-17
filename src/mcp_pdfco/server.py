@@ -322,9 +322,11 @@ async def pdf_add_watermark(
     font_size: int = 24,
     color: str = "FF0000",
     opacity: float = 0.5,
+    pages: str = "0-",
+    name: str = "watermarked.pdf",
     ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
 ) -> PDFWatermarkResponse:
-    """Add text watermark to PDF.
+    """Add text watermark/annotation to PDF.
 
     Args:
         url: URL or base64 encoded PDF
@@ -334,6 +336,8 @@ async def pdf_add_watermark(
         font_size: Font size (default: 24)
         color: Hex color without # (default: FF0000 red)
         opacity: Opacity 0.0-1.0 (default: 0.5)
+        pages: Page range to apply watermark (default: "0-" for all pages)
+        name: Output filename (default: watermarked.pdf)
         ctx: MCP context
 
     Returns:
@@ -341,7 +345,9 @@ async def pdf_add_watermark(
     """
     client = get_client(ctx)
     try:
-        return await client.pdf_add_watermark(url, text, x, y, font_size, color, opacity)
+        return await client.pdf_add_watermark(
+            url, text, x, y, font_size, color, opacity, pages, name
+        )
     except PDFcoAPIError as e:
         ctx.error(f"PDF watermark failed: {e.message}")
         raise
@@ -532,5 +538,3 @@ async def ocr_pdf(
 # Create ASGI application for uvicorn
 app = mcp.streamable_http_app()
 
-if __name__ == "__main__":
-    mcp.run()

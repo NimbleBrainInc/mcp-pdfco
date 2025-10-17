@@ -108,19 +108,72 @@ class PDFSplitResponse(BaseModel):
     message: str | None = Field(None, description="Error or status message")
 
 
+class PDFPageRectangle(BaseModel):
+    """Model for PDF page rectangle dimensions."""
+
+    Width: float | None = Field(None, description="Page width in points")
+    Height: float | None = Field(None, description="Page height in points")
+
+
+class PDFInfoDetails(BaseModel):
+    """Model for PDF info details."""
+
+    PageCount: int | None = Field(None, description="Number of pages in the PDF")
+    PageRectangle: PDFPageRectangle | None = Field(None, description="Page dimensions")
+    Encrypted: bool | None = Field(None, description="Whether the PDF is encrypted")
+    Title: str | None = Field(None, description="PDF title metadata")
+    Author: str | None = Field(None, description="PDF author metadata")
+    Subject: str | None = Field(None, description="PDF subject metadata")
+    FileSize: int | None = Field(None, description="File size in bytes")
+
+
 class PDFInfoResponse(BaseModel):
     """Response model for PDF info operation."""
 
     error: bool = Field(..., description="Whether an error occurred")
-    pageCount: int | None = Field(None, description="Number of pages in the PDF")
-    width: float | None = Field(None, description="Page width in points")
-    height: float | None = Field(None, description="Page height in points")
-    fileSize: int | None = Field(None, description="File size in bytes")
-    encrypted: bool | None = Field(None, description="Whether the PDF is encrypted")
-    title: str | None = Field(None, description="PDF title metadata")
-    author: str | None = Field(None, description="PDF author metadata")
-    subject: str | None = Field(None, description="PDF subject metadata")
+    info: PDFInfoDetails | None = Field(None, description="PDF information details")
     message: str | None = Field(None, description="Error or status message")
+
+    # Convenience properties for backward compatibility
+    @property
+    def pageCount(self) -> int | None:
+        """Get page count."""
+        return self.info.PageCount if self.info else None
+
+    @property
+    def width(self) -> float | None:
+        """Get page width."""
+        return self.info.PageRectangle.Width if self.info and self.info.PageRectangle else None
+
+    @property
+    def height(self) -> float | None:
+        """Get page height."""
+        return self.info.PageRectangle.Height if self.info and self.info.PageRectangle else None
+
+    @property
+    def fileSize(self) -> int | None:
+        """Get file size."""
+        return self.info.FileSize if self.info else None
+
+    @property
+    def encrypted(self) -> bool | None:
+        """Get encrypted status."""
+        return self.info.Encrypted if self.info else None
+
+    @property
+    def title(self) -> str | None:
+        """Get PDF title."""
+        return self.info.Title if self.info else None
+
+    @property
+    def author(self) -> str | None:
+        """Get PDF author."""
+        return self.info.Author if self.info else None
+
+    @property
+    def subject(self) -> str | None:
+        """Get PDF subject."""
+        return self.info.Subject if self.info else None
 
 
 class HTMLToPDFResponse(BaseModel):
