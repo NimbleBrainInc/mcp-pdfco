@@ -52,10 +52,10 @@ async def real_context() -> Context:  # type: ignore
     # For e2e tests, we can use a minimal context
     # The server functions will create their own API client
     class MinimalContext:
-        def warning(self, msg: str) -> None:
+        async def warning(self, msg: str) -> None:
             pass
 
-        def error(self, msg: str) -> None:
+        async def error(self, msg: str) -> None:
             pass
 
     yield MinimalContext()  # type: ignore
@@ -153,9 +153,11 @@ class TestE2EConversion:
             ctx=real_context,
         )
 
-        assert result.error is False
-        assert result.url is not None
-        assert "http" in result.url
+        assert result.type == "resource_link"
+        assert result.uri is not None
+        assert "http" in str(result.uri)
+        assert result.name == "e2e-test.pdf"
+        assert result.mimeType == "application/pdf"
 
     @pytest.mark.asyncio
     @pytest.mark.e2e
@@ -168,9 +170,11 @@ class TestE2EConversion:
             ctx=real_context,
         )
 
-        assert result.error is False
-        assert result.url is not None
-        assert "http" in result.url
+        assert result.type == "resource_link"
+        assert result.uri is not None
+        assert "http" in str(result.uri)
+        assert result.name == "example.pdf"
+        assert result.mimeType == "application/pdf"
 
 
 class TestE2EPDFManipulation:
@@ -186,9 +190,13 @@ class TestE2EPDFManipulation:
             ctx=real_context,
         )
 
-        assert result.error is False
-        assert result.urls is not None
-        assert len(result.urls) > 0
+        assert isinstance(result, list)
+        assert len(result) > 0
+        # Check first resource
+        assert result[0].type == "resource_link"
+        assert result[0].uri is not None
+        assert "http" in str(result[0].uri)
+        assert result[0].mimeType == "application/pdf"
 
     @pytest.mark.asyncio
     @pytest.mark.e2e
@@ -200,9 +208,11 @@ class TestE2EPDFManipulation:
             ctx=real_context,
         )
 
-        assert result.error is False
-        assert result.url is not None
-        assert "http" in result.url
+        assert result.type == "resource_link"
+        assert result.uri is not None
+        assert "http" in str(result.uri)
+        assert result.name == "merged-e2e.pdf"
+        assert result.mimeType == "application/pdf"
 
 
 class TestE2EPDFEditing:
@@ -223,9 +233,10 @@ class TestE2EPDFEditing:
             ctx=real_context,
         )
 
-        assert result.error is False
-        assert result.url is not None
-        assert "http" in result.url
+        assert result.type == "resource_link"
+        assert result.uri is not None
+        assert "http" in str(result.uri)
+        assert result.mimeType == "application/pdf"
 
     @pytest.mark.asyncio
     @pytest.mark.e2e
@@ -237,8 +248,10 @@ class TestE2EPDFEditing:
             ctx=real_context,
         )
 
-        assert result.error is False
-        assert result.url is not None
+        assert result.type == "resource_link"
+        assert result.uri is not None
+        assert "http" in str(result.uri)
+        assert result.mimeType == "application/pdf"
 
 
 class TestE2ESecurity:
@@ -258,18 +271,22 @@ class TestE2ESecurity:
             ctx=real_context,
         )
 
-        assert protected.error is False
-        assert protected.url is not None
+        assert protected.type == "resource_link"
+        assert protected.uri is not None
+        assert "http" in str(protected.uri)
+        assert protected.mimeType == "application/pdf"
 
         # Then unlock it
         unlocked = await pdf_unlock(
-            url=protected.url,
+            url=str(protected.uri),
             password=password,
             ctx=real_context,
         )
 
-        assert unlocked.error is False
-        assert unlocked.url is not None
+        assert unlocked.type == "resource_link"
+        assert unlocked.uri is not None
+        assert "http" in str(unlocked.uri)
+        assert unlocked.mimeType == "application/pdf"
 
 
 class TestE2EBarcode:

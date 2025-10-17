@@ -4,12 +4,6 @@
 [![NimbleBrain Platform](https://img.shields.io/badge/NimbleBrain-Platform-blue)](https://www.nimblebrain.ai)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?logo=discord&logoColor=white)](https://www.nimblebrain.ai/discord?utm_source=github&utm_medium=readme&utm_campaign=mcp-pdfco&utm_content=discord-badge)
 
-
-[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/NimbleBrainInc/mcp-pdfco/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-pdfco/actions)
-
-
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/NimbleBrainInc/mcp-pdfco/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-pdfco/actions)

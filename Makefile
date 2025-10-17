@@ -1,5 +1,5 @@
 IMAGE_NAME = nimbletools/mcp-pdfco
-VERSION ?= 1.0.0
+VERSION ?= 2.0.0
 
 .PHONY: help install dev-install format lint test clean run check all docker-build release docker-run test-e2e
 
@@ -45,8 +45,11 @@ clean: ## Clean up artifacts
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 
-run: ## Run the MCP server
+run: ## Run the MCP server (stdio mode)
 	uv run python -m mcp_pdfco.server
+
+run-http: ## Run HTTP server with uvicorn
+	uv run uvicorn mcp_pdfco.server:app --host 0.0.0.0 --port 8100
 
 check: lint typecheck test ## Run all checks
 
