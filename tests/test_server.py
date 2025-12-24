@@ -1,5 +1,6 @@
 """Unit tests for the MCP server tools."""
 
+import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -32,6 +33,11 @@ def mcp_server():
     return mcp
 
 
+def parse_result(result):
+    """Parse the JSON text content from a tool result."""
+    return json.loads(result.content[0].text)
+
+
 class TestPDFConversionTools:
     """Test PDF conversion tools."""
 
@@ -49,8 +55,9 @@ class TestPDFConversionTools:
                     "pdf_to_text", {"url": "http://example.com/test.pdf"}
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.text == "Sample text"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["text"] == "Sample text"
             mock_client.pdf_to_text.assert_called_once_with(
                 "http://example.com/test.pdf", None, False
             )
@@ -69,8 +76,9 @@ class TestPDFConversionTools:
                     "pdf_to_json", {"url": "http://example.com/test.pdf"}
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.data == {"key": "value"}
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["data"] == {"key": "value"}
             mock_client.pdf_to_json.assert_called_once_with("http://example.com/test.pdf", None)
 
     @pytest.mark.asyncio
@@ -87,8 +95,9 @@ class TestPDFConversionTools:
                     "pdf_to_html", {"url": "http://example.com/test.pdf"}
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.html == "<html>content</html>"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["html"] == "<html>content</html>"
 
     @pytest.mark.asyncio
     async def test_pdf_to_csv(self, mcp_server):
@@ -104,8 +113,9 @@ class TestPDFConversionTools:
                     "pdf_to_csv", {"url": "http://example.com/test.pdf"}
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.csv == "col1,col2\nval1,val2"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["csv"] == "col1,col2\nval1,val2"
 
 
 class TestPDFManipulationTools:
@@ -124,8 +134,9 @@ class TestPDFManipulationTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("pdf_merge", {"urls": urls})
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/merged.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/merged.pdf"
             mock_client.pdf_merge.assert_called_once_with(urls, "merged.pdf", False)
 
     @pytest.mark.asyncio
@@ -138,10 +149,13 @@ class TestPDFManipulationTools:
             mock_client.pdf_split.return_value = mock_response
 
             async with Client(mcp_server) as client:
-                result = await client.call_tool("pdf_split", {"url": "http://example.com/test.pdf"})
+                result = await client.call_tool(
+                    "pdf_split", {"url": "http://example.com/test.pdf"}
+                )
 
-            assert result.content[0].data.error is False
-            assert len(result.content[0].data.urls) == 1
+            data = parse_result(result)
+            assert data["error"] is False
+            assert len(data["urls"]) == 1
 
     @pytest.mark.asyncio
     async def test_pdf_info(self, mcp_server):
@@ -153,10 +167,13 @@ class TestPDFManipulationTools:
             mock_client.pdf_info.return_value = mock_response
 
             async with Client(mcp_server) as client:
-                result = await client.call_tool("pdf_info", {"url": "http://example.com/test.pdf"})
+                result = await client.call_tool(
+                    "pdf_info", {"url": "http://example.com/test.pdf"}
+                )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.info.PageCount == 10
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["info"]["PageCount"] == 10
 
     @pytest.mark.asyncio
     async def test_pdf_compress(self, mcp_server):
@@ -174,8 +191,9 @@ class TestPDFManipulationTools:
                     "pdf_compress", {"url": "http://example.com/test.pdf"}
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/compressed.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/compressed.pdf"
 
 
 class TestBarcodeTools:
@@ -195,8 +213,9 @@ class TestBarcodeTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("barcode_generate", {"value": "test123"})
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/barcode.png"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/barcode.png"
 
     @pytest.mark.asyncio
     async def test_barcode_read(self, mcp_server):
@@ -212,8 +231,9 @@ class TestBarcodeTools:
                     "barcode_read", {"url": "http://example.com/image.png"}
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.barcodes == []
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["barcodes"] == []
 
 
 class TestConversionTools:
@@ -231,8 +251,9 @@ class TestConversionTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("html_to_pdf", {"html": "<html>test</html>"})
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/output.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/output.pdf"
 
     @pytest.mark.asyncio
     async def test_url_to_pdf(self, mcp_server):
@@ -246,8 +267,9 @@ class TestConversionTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("url_to_pdf", {"url": "http://example.com"})
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/webpage.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/webpage.pdf"
 
     @pytest.mark.asyncio
     async def test_image_to_pdf(self, mcp_server):
@@ -262,8 +284,9 @@ class TestConversionTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("image_to_pdf", {"images": images})
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/images.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/images.pdf"
 
 
 class TestSecurityTools:
@@ -275,7 +298,9 @@ class TestSecurityTools:
         with patch("mcp_pdfco.server.get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
-            mock_response = PDFProtectResponse(error=False, url="http://example.com/protected.pdf")
+            mock_response = PDFProtectResponse(
+                error=False, url="http://example.com/protected.pdf"
+            )
             mock_client.pdf_protect.return_value = mock_response
 
             async with Client(mcp_server) as client:
@@ -284,8 +309,9 @@ class TestSecurityTools:
                     {"url": "http://example.com/test.pdf", "owner_password": "owner123"},
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/protected.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/protected.pdf"
 
     @pytest.mark.asyncio
     async def test_pdf_unlock(self, mcp_server):
@@ -302,5 +328,6 @@ class TestSecurityTools:
                     {"url": "http://example.com/test.pdf", "password": "password123"},
                 )
 
-            assert result.content[0].data.error is False
-            assert result.content[0].data.url == "http://example.com/unlocked.pdf"
+            data = parse_result(result)
+            assert data["error"] is False
+            assert data["url"] == "http://example.com/unlocked.pdf"
