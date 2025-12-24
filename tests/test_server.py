@@ -149,9 +149,7 @@ class TestPDFManipulationTools:
         with patch("mcp_pdfco.server.get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
-            mock_response = PDFInfoResponse(
-                error=False, info=PDFInfoDetails(PageCount=10)
-            )
+            mock_response = PDFInfoResponse(error=False, info=PDFInfoDetails(PageCount=10))
             mock_client.pdf_info.return_value = mock_response
 
             async with Client(mcp_server) as client:
@@ -166,7 +164,9 @@ class TestPDFManipulationTools:
         with patch("mcp_pdfco.server.get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
-            mock_response = PDFCompressResponse(error=False, url="http://example.com/compressed.pdf")
+            mock_response = PDFCompressResponse(
+                error=False, url="http://example.com/compressed.pdf"
+            )
             mock_client.pdf_compress.return_value = mock_response
 
             async with Client(mcp_server) as client:
@@ -187,7 +187,9 @@ class TestBarcodeTools:
         with patch("mcp_pdfco.server.get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
-            mock_response = BarcodeGenerateResponse(error=False, url="http://example.com/barcode.png")
+            mock_response = BarcodeGenerateResponse(
+                error=False, url="http://example.com/barcode.png"
+            )
             mock_client.barcode_generate.return_value = mock_response
 
             async with Client(mcp_server) as client:
