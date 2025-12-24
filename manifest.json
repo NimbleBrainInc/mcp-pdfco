@@ -1,0 +1,19 @@
+{
+  "manifest_version": "0.3",
+  "name": "ai.nimbletools/pdfco",
+  "version": "1.0.0",
+  "description": "PDF.co MCP Server with comprehensive PDF manipulation and OpenAPI support",
+  "author": {
+    "name": "NimbleBrain Inc"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "mcp_pdfco/server.py",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/mcp_pdfco/server.py"
+      ]
+    }
+  }
+}
