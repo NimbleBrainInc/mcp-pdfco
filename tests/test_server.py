@@ -149,9 +149,7 @@ class TestPDFManipulationTools:
             mock_client.pdf_split.return_value = mock_response
 
             async with Client(mcp_server) as client:
-                result = await client.call_tool(
-                    "pdf_split", {"url": "http://example.com/test.pdf"}
-                )
+                result = await client.call_tool("pdf_split", {"url": "http://example.com/test.pdf"})
 
             data = parse_result(result)
             assert data["error"] is False
@@ -167,9 +165,7 @@ class TestPDFManipulationTools:
             mock_client.pdf_info.return_value = mock_response
 
             async with Client(mcp_server) as client:
-                result = await client.call_tool(
-                    "pdf_info", {"url": "http://example.com/test.pdf"}
-                )
+                result = await client.call_tool("pdf_info", {"url": "http://example.com/test.pdf"})
 
             data = parse_result(result)
             assert data["error"] is False
@@ -298,9 +294,7 @@ class TestSecurityTools:
         with patch("mcp_pdfco.server.get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
-            mock_response = PDFProtectResponse(
-                error=False, url="http://example.com/protected.pdf"
-            )
+            mock_response = PDFProtectResponse(error=False, url="http://example.com/protected.pdf")
             mock_client.pdf_protect.return_value = mock_response
 
             async with Client(mcp_server) as client:
