@@ -9,11 +9,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/NimbleBrainInc/mcp-pdfco/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-pdfco/actions)
 
-
-[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/NimbleBrainInc/mcp-pdfco/actions/workflows/ci.yaml/badge.svg)](https://github.com/NimbleBrainInc/mcp-pdfco/actions)
-
 ## About
 
 MCP server for PDF.co API. Comprehensive PDF manipulation, conversion, OCR,
@@ -341,10 +336,8 @@ This server follows S-Tier MCP architecture principles:
 
 - Python 3.13+
 - aiohttp >= 3.12.15
-- fastapi >= 0.117.1
-- fastmcp >= 2.12.4
+- fastmcp >= 2.14.0
 - pydantic >= 2.0.0
-- uvicorn >= 0.34.0
 
 ## API Documentation
 
