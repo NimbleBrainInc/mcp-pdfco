@@ -1,5 +1,5 @@
 IMAGE_NAME = nimbletools/mcp-pdfco
-VERSION ?= 1.0.0
+VERSION ?= 1.1.0
 
 .PHONY: help install dev-install format format-check lint lint-fix typecheck test test-cov clean run check all docker-build release docker-run test-e2e
 
