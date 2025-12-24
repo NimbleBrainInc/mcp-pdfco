@@ -1,7 +1,7 @@
 IMAGE_NAME = nimbletools/mcp-pdfco
 VERSION ?= 1.0.0
 
-.PHONY: help install dev-install format lint test clean run check all docker-build release docker-run test-e2e
+.PHONY: help install dev-install format format-check lint lint-fix typecheck test test-cov clean run check all docker-build release docker-run test-e2e
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -17,6 +17,9 @@ dev-install: ## Install with dev dependencies
 
 format: ## Format code with ruff
 	uv run ruff format src/ tests/
+
+format-check: ## Check code formatting with ruff
+	uv run ruff format --check src/ tests/
 
 lint: ## Lint code with ruff
 	uv run ruff check src/ tests/
@@ -48,7 +51,7 @@ clean: ## Clean up artifacts
 run: ## Run the MCP server
 	uv run python -m mcp_pdfco.server
 
-check: lint typecheck test ## Run all checks
+check: format-check lint typecheck test ## Run all checks
 
 all: clean install format lint typecheck test ## Full workflow
 

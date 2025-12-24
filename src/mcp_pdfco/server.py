@@ -1,11 +1,10 @@
 """FastMCP server for PDF.co API."""
 
 import os
-from typing import Any
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from mcp.server.fastmcp import Context, FastMCP
+from fastmcp import Context, FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from .api_client import PDFcoAPIError, PDFcoClient
 from .api_models import (
@@ -36,12 +35,12 @@ mcp = FastMCP("PDFco")
 _client: PDFcoClient | None = None
 
 
-def get_client(ctx: Context[Any, Any, Any]) -> PDFcoClient:
+def get_client(ctx: Context | None = None) -> PDFcoClient:
     """Get or create the API client instance."""
     global _client
     if _client is None:
         api_key = os.environ.get("PDFCO_API_KEY")
-        if not api_key:
+        if not api_key and ctx:
             ctx.warning(
                 "PDFCO_API_KEY is not set - API calls will fail. "
                 "Get your API key from https://app.pdf.co/dashboard"
@@ -63,7 +62,7 @@ async def pdf_to_text(
     url: str,
     pages: str | None = None,
     async_mode: bool = False,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFToTextResponse:
     """Extract text from PDF.
 
@@ -80,7 +79,8 @@ async def pdf_to_text(
     try:
         return await client.pdf_to_text(url, pages, async_mode)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to text conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF to text conversion failed: {e.message}")
         raise
 
 
@@ -88,7 +88,7 @@ async def pdf_to_text(
 async def pdf_to_json(
     url: str,
     pages: str | None = None,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFToJSONResponse:
     """Extract structured data from PDF.
 
@@ -104,7 +104,8 @@ async def pdf_to_json(
     try:
         return await client.pdf_to_json(url, pages)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to JSON conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF to JSON conversion failed: {e.message}")
         raise
 
 
@@ -113,7 +114,7 @@ async def pdf_to_html(
     url: str,
     pages: str | None = None,
     simple: bool = False,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFToHTMLResponse:
     """Convert PDF to HTML.
 
@@ -130,7 +131,8 @@ async def pdf_to_html(
     try:
         return await client.pdf_to_html(url, pages, simple)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to HTML conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF to HTML conversion failed: {e.message}")
         raise
 
 
@@ -138,7 +140,7 @@ async def pdf_to_html(
 async def pdf_to_csv(
     url: str,
     pages: str | None = None,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFToCSVResponse:
     """Extract tables from PDF to CSV.
 
@@ -154,7 +156,8 @@ async def pdf_to_csv(
     try:
         return await client.pdf_to_csv(url, pages)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF to CSV conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF to CSV conversion failed: {e.message}")
         raise
 
 
@@ -163,7 +166,7 @@ async def pdf_merge(
     urls: list[str],
     name: str = "merged.pdf",
     async_mode: bool = False,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFMergeResponse:
     """Merge multiple PDFs into one.
 
@@ -180,7 +183,8 @@ async def pdf_merge(
     try:
         return await client.pdf_merge(urls, name, async_mode)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF merge failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF merge failed: {e.message}")
         raise
 
 
@@ -189,7 +193,7 @@ async def pdf_split(
     url: str,
     pages: str | None = None,
     split_by_pages: bool = False,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFSplitResponse:
     """Split PDF into separate pages or ranges.
 
@@ -206,14 +210,15 @@ async def pdf_split(
     try:
         return await client.pdf_split(url, pages, split_by_pages)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF split failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF split failed: {e.message}")
         raise
 
 
 @mcp.tool()
 async def pdf_info(
     url: str,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFInfoResponse:
     """Get PDF metadata (pages, size, etc.).
 
@@ -228,7 +233,8 @@ async def pdf_info(
     try:
         return await client.pdf_info(url)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF info retrieval failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF info retrieval failed: {e.message}")
         raise
 
 
@@ -239,7 +245,7 @@ async def html_to_pdf(
     margins: str | None = None,
     orientation: str = "Portrait",
     page_size: str = "Letter",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> HTMLToPDFResponse:
     """Convert HTML to PDF.
 
@@ -258,7 +264,8 @@ async def html_to_pdf(
     try:
         return await client.html_to_pdf(html, name, margins, orientation, page_size)
     except PDFcoAPIError as e:
-        ctx.error(f"HTML to PDF conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"HTML to PDF conversion failed: {e.message}")
         raise
 
 
@@ -268,7 +275,7 @@ async def url_to_pdf(
     name: str = "webpage.pdf",
     orientation: str = "Portrait",
     page_size: str = "Letter",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> URLToPDFResponse:
     """Convert web page URL to PDF.
 
@@ -286,7 +293,8 @@ async def url_to_pdf(
     try:
         return await client.url_to_pdf(url, name, orientation, page_size)
     except PDFcoAPIError as e:
-        ctx.error(f"URL to PDF conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"URL to PDF conversion failed: {e.message}")
         raise
 
 
@@ -294,7 +302,7 @@ async def url_to_pdf(
 async def image_to_pdf(
     images: list[str],
     name: str = "images.pdf",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> ImageToPDFResponse:
     """Convert images to PDF.
 
@@ -310,7 +318,8 @@ async def image_to_pdf(
     try:
         return await client.image_to_pdf(images, name)
     except PDFcoAPIError as e:
-        ctx.error(f"Image to PDF conversion failed: {e.message}")
+        if ctx:
+            await ctx.error(f"Image to PDF conversion failed: {e.message}")
         raise
 
 
@@ -325,7 +334,7 @@ async def pdf_add_watermark(
     opacity: float = 0.5,
     pages: str = "0-",
     name: str = "watermarked.pdf",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFWatermarkResponse:
     """Add text watermark/annotation to PDF.
 
@@ -350,7 +359,8 @@ async def pdf_add_watermark(
             url, text, x, y, font_size, color, opacity, pages, name
         )
     except PDFcoAPIError as e:
-        ctx.error(f"PDF watermark failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF watermark failed: {e.message}")
         raise
 
 
@@ -359,7 +369,7 @@ async def pdf_rotate(
     url: str,
     angle: int,
     pages: str | None = None,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFRotateResponse:
     """Rotate PDF pages.
 
@@ -376,7 +386,8 @@ async def pdf_rotate(
     try:
         return await client.pdf_rotate(url, angle, pages)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF rotation failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF rotation failed: {e.message}")
         raise
 
 
@@ -384,7 +395,7 @@ async def pdf_rotate(
 async def pdf_compress(
     url: str,
     compression_level: str = "balanced",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFCompressResponse:
     """Compress PDF file size.
 
@@ -400,7 +411,8 @@ async def pdf_compress(
     try:
         return await client.pdf_compress(url, compression_level)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF compression failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF compression failed: {e.message}")
         raise
 
 
@@ -411,7 +423,7 @@ async def pdf_protect(
     user_password: str | None = None,
     allow_print: bool = True,
     allow_copy: bool = False,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFProtectResponse:
     """Add password protection to PDF.
 
@@ -430,7 +442,8 @@ async def pdf_protect(
     try:
         return await client.pdf_protect(url, owner_password, user_password, allow_print, allow_copy)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF protection failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF protection failed: {e.message}")
         raise
 
 
@@ -438,7 +451,7 @@ async def pdf_protect(
 async def pdf_unlock(
     url: str,
     password: str,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> PDFUnlockResponse:
     """Remove password from PDF.
 
@@ -454,7 +467,8 @@ async def pdf_unlock(
     try:
         return await client.pdf_unlock(url, password)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF unlock failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF unlock failed: {e.message}")
         raise
 
 
@@ -463,7 +477,7 @@ async def barcode_generate(
     value: str,
     barcode_type: str = "QRCode",
     format: str = "png",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> BarcodeGenerateResponse:
     """Generate barcode images.
 
@@ -480,7 +494,8 @@ async def barcode_generate(
     try:
         return await client.barcode_generate(value, barcode_type, format)
     except PDFcoAPIError as e:
-        ctx.error(f"Barcode generation failed: {e.message}")
+        if ctx:
+            await ctx.error(f"Barcode generation failed: {e.message}")
         raise
 
 
@@ -488,7 +503,7 @@ async def barcode_generate(
 async def barcode_read(
     url: str,
     barcode_types: list[str] | None = None,
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> BarcodeReadResponse:
     """Read barcodes from images.
 
@@ -507,7 +522,8 @@ async def barcode_read(
             barcode_types = ["QRCode", "Code128", "Code39", "EAN13", "EAN8", "UPCA", "UPCE"]
         return await client.barcode_read(url, barcode_types)
     except PDFcoAPIError as e:
-        ctx.error(f"Barcode reading failed: {e.message}")
+        if ctx:
+            await ctx.error(f"Barcode reading failed: {e.message}")
         raise
 
 
@@ -516,7 +532,7 @@ async def ocr_pdf(
     url: str,
     pages: str | None = None,
     lang: str = "eng",
-    ctx: Context[Any, Any, Any] = None,  # type: ignore[assignment]
+    ctx: Context | None = None,
 ) -> OCRPDFResponse:
     """OCR scanned PDFs to searchable text.
 
@@ -533,9 +549,10 @@ async def ocr_pdf(
     try:
         return await client.ocr_pdf(url, pages, lang)
     except PDFcoAPIError as e:
-        ctx.error(f"PDF OCR failed: {e.message}")
+        if ctx:
+            await ctx.error(f"PDF OCR failed: {e.message}")
         raise
 
 
-# Create ASGI application for uvicorn
-app = mcp.streamable_http_app()
+# Create ASGI application for deployment
+app = mcp.http_app()
