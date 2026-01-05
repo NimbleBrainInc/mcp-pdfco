@@ -1,19 +1,29 @@
 {
   "manifest_version": "0.3",
   "name": "ai.nimbletools/pdfco",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PDF.co MCP Server with comprehensive PDF manipulation and OpenAPI support",
   "author": {
     "name": "NimbleBrain Inc"
   },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "PDF.co API Key",
+      "description": "Your PDF.co API key from https://app.pdf.co/dashboard",
+      "sensitive": true,
+      "required": true
+    }
+  },
   "server": {
     "type": "python",
-    "entry_point": "mcp_pdfco/server.py",
+    "entry_point": "mcp_pdfco.server",
     "mcp_config": {
       "command": "python",
-      "args": [
-        "${__dirname}/mcp_pdfco/server.py"
-      ]
+      "args": ["-m", "mcp_pdfco.server"],
+      "env": {
+        "PDFCO_API_KEY": "${user_config.api_key}"
+      }
     }
   }
 }

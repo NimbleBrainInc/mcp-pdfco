@@ -556,3 +556,7 @@ async def ocr_pdf(
 
 # Create ASGI application for deployment
 app = mcp.http_app()
+
+# Stdio entrypoint for Claude Desktop / mpak
+if __name__ == "__main__":
+    mcp.run()
