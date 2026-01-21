@@ -1,7 +1,8 @@
-IMAGE_NAME = nimbletools/mcp-pdfco
-VERSION ?= 1.1.0
+# MCPB bundle configuration
+BUNDLE_NAME = mcp-pdfco
+VERSION ?= 0.1.2
 
-.PHONY: help install dev-install format format-check lint lint-fix typecheck test test-cov clean run check all docker-build release docker-run test-e2e
+.PHONY: help install dev-install format format-check lint lint-fix typecheck test test-cov test-e2e clean run check all bundle bundle-run bundle-clean
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -36,7 +37,7 @@ test: ## Run tests with pytest
 test-cov: ## Run tests with coverage
 	uv run pytest tests/ -v --cov=src/mcp_pdfco --cov-report=term-missing
 
-test-e2e: ## Run end-to-end Docker tests
+test-e2e: ## Run end-to-end API tests (requires PDFCO_API_KEY)
 	uv run pytest e2e/ -v -s
 
 clean: ## Clean up artifacts
@@ -47,26 +48,40 @@ clean: ## Clean up artifacts
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name ".coverage" -delete
+	rm -rf bundle/ dist/ *.mcpb
 
-run: ## Run the MCP server
+run: ## Run the MCP server (stdio mode)
 	uv run python -m mcp_pdfco.server
 
 check: format-check lint typecheck test ## Run all checks
 
-all: clean install format lint typecheck test ## Full workflow
+all: clean dev-install format lint typecheck test ## Full workflow
 
-# Docker commands
-docker-build: ## Build Docker image locally
-	docker build -t $(IMAGE_NAME):$(VERSION) -t $(IMAGE_NAME):latest .
+# MCPB bundle commands
+bundle: ## Build MCPB bundle to dist/
+	@echo "Building MCPB bundle..."
+	@rm -rf bundle/ dist/
+	@mkdir -p bundle dist
+	@# Copy source files (module at bundle root for python -m imports)
+	@cp -r src/mcp_pdfco bundle/
+	@cp manifest.json bundle/
+	@cp pyproject.toml bundle/
+	@cp README.md bundle/ 2>/dev/null || true
+	@# Install dependencies into bundle
+	@uv pip compile pyproject.toml --quiet > /tmp/requirements.txt
+	@cd bundle && uv pip install --target deps/ -r /tmp/requirements.txt
+	@rm /tmp/requirements.txt
+	@# Pack the bundle
+	mcpb pack bundle/ dist/$(BUNDLE_NAME)-v$(VERSION).mcpb
+	@rm -rf bundle/
+	@echo "Bundle created: dist/$(BUNDLE_NAME)-v$(VERSION).mcpb"
 
-docker-run: ## Run Docker container
-	docker run -e ABSTRACT_API_KEY=$(ABSTRACT_API_KEY) -p 8000:8000 $(IMAGE_NAME):$(VERSION)
+bundle-run: bundle ## Build and run bundle interactively
+	mpak run --local dist/$(BUNDLE_NAME)-v$(VERSION).mcpb
 
-release: ## Build and push multi-platform Docker image
-	docker buildx build --platform linux/amd64,linux/arm64 \
-		-t $(IMAGE_NAME):$(VERSION) \
-		-t $(IMAGE_NAME):latest \
-		--push .
+bundle-clean: ## Clean bundle artifacts
+	rm -rf bundle/ dist/
 
 # Aliases
 fmt: format

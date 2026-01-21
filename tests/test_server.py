@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastmcp import Client
+from mcp.types import ResourceLink
 
 from mcp_pdfco.api_models import (
     BarcodeGenerateResponse,
@@ -134,9 +135,13 @@ class TestPDFManipulationTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("pdf_merge", {"urls": urls})
 
-            data = parse_result(result)
-            assert data["error"] is False
-            assert data["url"] == "http://example.com/merged.pdf"
+            # First content block is ResourceLink
+            assert isinstance(result.content[0], ResourceLink)
+            assert str(result.content[0].uri) == "http://example.com/merged.pdf"
+            assert result.content[0].mimeType == "application/pdf"
+            # Second content block is TextContent with metadata
+            data = json.loads(result.content[1].text)
+            assert data["success"] is True
             mock_client.pdf_merge.assert_called_once_with(urls, "merged.pdf", False)
 
     @pytest.mark.asyncio
@@ -247,9 +252,13 @@ class TestConversionTools:
             async with Client(mcp_server) as client:
                 result = await client.call_tool("html_to_pdf", {"html": "<html>test</html>"})
 
-            data = parse_result(result)
-            assert data["error"] is False
-            assert data["url"] == "http://example.com/output.pdf"
+            # First content block is ResourceLink
+            assert isinstance(result.content[0], ResourceLink)
+            assert str(result.content[0].uri) == "http://example.com/output.pdf"
+            assert result.content[0].mimeType == "application/pdf"
+            # Second content block is TextContent with metadata
+            data = json.loads(result.content[1].text)
+            assert data["success"] is True
 
     @pytest.mark.asyncio
     async def test_url_to_pdf(self, mcp_server):

@@ -5,6 +5,8 @@
 .pytest_cache/
 __pycache__/
 *.pyc
+
+# Cache directories
 .mypy_cache/
 .ruff_cache/
 .coverage
@@ -31,3 +33,11 @@ uv.lock
 # IDE
 .vscode/
 .idea/
+
+# Docs (not needed in bundle)
+CLAUDE.md
+CONTRIBUTING.md
+LICENSE
+
+# Images
+*.png

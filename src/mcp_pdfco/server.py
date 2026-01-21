@@ -1,8 +1,10 @@
 """FastMCP server for PDF.co API."""
 
+import json
 import os
 
 from fastmcp import Context, FastMCP
+from mcp.types import ContentBlock, ResourceLink, TextContent
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -10,12 +12,10 @@ from .api_client import PDFcoAPIError, PDFcoClient
 from .api_models import (
     BarcodeGenerateResponse,
     BarcodeReadResponse,
-    HTMLToPDFResponse,
     ImageToPDFResponse,
     OCRPDFResponse,
     PDFCompressResponse,
     PDFInfoResponse,
-    PDFMergeResponse,
     PDFProtectResponse,
     PDFRotateResponse,
     PDFSplitResponse,
@@ -167,7 +167,7 @@ async def pdf_merge(
     name: str = "merged.pdf",
     async_mode: bool = False,
     ctx: Context | None = None,
-) -> PDFMergeResponse:
+) -> list[ContentBlock]:
     """Merge multiple PDFs into one.
 
     Args:
@@ -177,11 +177,38 @@ async def pdf_merge(
         ctx: MCP context
 
     Returns:
-        PDFMergeResponse with merged PDF URL
+        ResourceLink to merged PDF and operation metadata
     """
     client = get_client(ctx)
     try:
-        return await client.pdf_merge(urls, name, async_mode)
+        result = await client.pdf_merge(urls, name, async_mode)
+        if result.error or not result.url:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"success": False, "error": result.message or "PDF merge failed"}
+                    ),
+                ),
+            ]
+        return [
+            ResourceLink(
+                type="resource_link",
+                uri=result.url,  # type: ignore[arg-type]  # Pydantic coerces str to AnyUrl
+                name=name,
+                mimeType="application/pdf",
+            ),
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "success": True,
+                        "pageCount": result.pageCount,
+                        "message": result.message,
+                    }
+                ),
+            ),
+        ]
     except PDFcoAPIError as e:
         if ctx:
             await ctx.error(f"PDF merge failed: {e.message}")
@@ -246,7 +273,7 @@ async def html_to_pdf(
     orientation: str = "Portrait",
     page_size: str = "Letter",
     ctx: Context | None = None,
-) -> HTMLToPDFResponse:
+) -> list[ContentBlock]:
     """Convert HTML to PDF.
 
     Args:
@@ -258,11 +285,41 @@ async def html_to_pdf(
         ctx: MCP context
 
     Returns:
-        HTMLToPDFResponse with generated PDF URL
+        ResourceLink to generated PDF and operation metadata
     """
     client = get_client(ctx)
     try:
-        return await client.html_to_pdf(html, name, margins, orientation, page_size)
+        result = await client.html_to_pdf(html, name, margins, orientation, page_size)
+        if result.error or not result.url:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "success": False,
+                            "error": result.message or "HTML to PDF conversion failed",
+                        }
+                    ),
+                ),
+            ]
+        return [
+            ResourceLink(
+                type="resource_link",
+                uri=result.url,  # type: ignore[arg-type]  # Pydantic coerces str to AnyUrl
+                name=name,
+                mimeType="application/pdf",
+            ),
+            TextContent(
+                type="text",
+                text=json.dumps(
+                    {
+                        "success": True,
+                        "pageCount": result.pageCount,
+                        "message": result.message,
+                    }
+                ),
+            ),
+        ]
     except PDFcoAPIError as e:
         if ctx:
             await ctx.error(f"HTML to PDF conversion failed: {e.message}")
