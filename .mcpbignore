@@ -23,9 +23,11 @@ build/
 
 # Dev config
 Makefile
+pyproject.toml
 pytest.ini
 .env
 .env.*
+scripts/
 
 # Lock files
 uv.lock
@@ -34,10 +36,16 @@ uv.lock
 .vscode/
 .idea/
 
-# Docs (not needed in bundle)
+# Claude
+.claude/
 CLAUDE.md
+
+# Docs (not needed in bundle)
 CONTRIBUTING.md
 LICENSE
+
+# Registry metadata
+mpak.json
 
 # Images
 *.png

@@ -1,8 +1,8 @@
 # MCPB bundle configuration
 BUNDLE_NAME = mcp-pdfco
-VERSION ?= 0.1.2
+VERSION ?= 0.3.0
 
-.PHONY: help install dev-install format format-check lint lint-fix typecheck test test-cov test-e2e clean run check all bundle bundle-run bundle-clean
+.PHONY: help install dev-install format format-check lint lint-fix typecheck test test-cov test-e2e clean run run-http test-http check all bundle bundle-run bundle-clean bump
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -47,41 +47,43 @@ clean: ## Clean up artifacts
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name ".coverage" -delete
-	rm -rf bundle/ dist/ *.mcpb
+	find . -type d -name ".coverage" -exec rm -rf {} + 2>/dev/null || true
+	rm -rf bundle/ *.mcpb
 
 run: ## Run the MCP server (stdio mode)
 	uv run python -m mcp_pdfco.server
+
+run-http: ## Run HTTP server with uvicorn
+	uv run uvicorn mcp_pdfco.server:app --host 0.0.0.0 --port 8000
+
+test-http: ## Test HTTP server is running
+	@echo "Testing health endpoint..."
+	@curl -s http://localhost:8000/health | grep -q "healthy" && echo "Server is healthy" || echo "Server not responding"
 
 check: format-check lint typecheck test ## Run all checks
 
 all: clean dev-install format lint typecheck test ## Full workflow
 
 # MCPB bundle commands
-bundle: ## Build MCPB bundle to dist/
-	@echo "Building MCPB bundle..."
-	@rm -rf bundle/ dist/
-	@mkdir -p bundle dist
-	@# Copy source files (module at bundle root for python -m imports)
-	@cp -r src/mcp_pdfco bundle/
-	@cp manifest.json bundle/
-	@cp pyproject.toml bundle/
-	@cp README.md bundle/ 2>/dev/null || true
-	@# Install dependencies into bundle
-	@uv pip compile pyproject.toml --quiet > /tmp/requirements.txt
-	@cd bundle && uv pip install --target deps/ -r /tmp/requirements.txt
-	@rm /tmp/requirements.txt
-	@# Pack the bundle
-	mcpb pack bundle/ dist/$(BUNDLE_NAME)-v$(VERSION).mcpb
-	@rm -rf bundle/
-	@echo "Bundle created: dist/$(BUNDLE_NAME)-v$(VERSION).mcpb"
+bundle: ## Build MCPB bundle locally
+	@./scripts/build-bundle.sh . $(VERSION)
 
-bundle-run: bundle ## Build and run bundle interactively
-	mpak run --local dist/$(BUNDLE_NAME)-v$(VERSION).mcpb
+bundle-run: bundle ## Build and run MCPB bundle locally
+	mpak run --local nimblebraininc-pdfco-$(VERSION)-*.mcpb
 
 bundle-clean: ## Clean bundle artifacts
-	rm -rf bundle/ dist/
+	rm -rf bundle/ dist/ deps/ *.mcpb
+
+bump: ## Bump version across all files (usage: make bump VERSION=0.3.0)
+	@if [ -z "$(VERSION)" ]; then echo "Usage: make bump VERSION=x.y.z"; exit 1; fi
+	@echo "Bumping version to $(VERSION)..."
+	@jq --arg v "$(VERSION)" '.version = $$v' manifest.json > manifest.tmp.json && mv manifest.tmp.json manifest.json
+	@sed -i '' 's/^version = ".*"/version = "$(VERSION)"/' pyproject.toml
+	@sed -i '' 's/^__version__ = ".*"/__version__ = "$(VERSION)"/' src/mcp_pdfco/__init__.py
+	@echo "Updated:"
+	@echo "  manifest.json:               $$(jq -r .version manifest.json)"
+	@echo "  pyproject.toml:              $$(grep '^version' pyproject.toml)"
+	@echo "  src/mcp_pdfco/__init__.py:   $$(grep '__version__' src/mcp_pdfco/__init__.py)"
 
 # Aliases
 fmt: format

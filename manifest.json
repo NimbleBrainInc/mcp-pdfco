@@ -1,10 +1,15 @@
 {
-  "manifest_version": "0.3",
+  "manifest_version": "0.4",
   "name": "@nimblebraininc/pdfco",
-  "version": "0.1.2",
+  "version": "0.3.0",
   "description": "PDF.co MCP Server with comprehensive PDF manipulation and OpenAPI support",
   "author": {
-    "name": "NimbleBrain Inc"
+    "name": "NimbleBrain Inc",
+    "email": "hello@nimblebrain.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NimbleBrainInc/mcp-pdfco"
   },
   "user_config": {
     "api_key": {
@@ -20,9 +25,98 @@
     "entry_point": "mcp_pdfco.server",
     "mcp_config": {
       "command": "python",
-      "args": ["-m", "mcp_pdfco.server"],
+      "args": [
+        "-m",
+        "mcp_pdfco.server"
+      ],
       "env": {
         "PDFCO_API_KEY": "${user_config.api_key}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "pdf_to_text",
+      "description": "Extract text from PDF"
+    },
+    {
+      "name": "pdf_to_json",
+      "description": "Extract structured data from PDF"
+    },
+    {
+      "name": "pdf_to_html",
+      "description": "Convert PDF to HTML"
+    },
+    {
+      "name": "pdf_to_csv",
+      "description": "Extract tables from PDF to CSV"
+    },
+    {
+      "name": "pdf_merge",
+      "description": "Merge multiple PDFs into one"
+    },
+    {
+      "name": "pdf_split",
+      "description": "Split PDF into separate pages or ranges"
+    },
+    {
+      "name": "pdf_info",
+      "description": "Get PDF metadata (pages, size, etc.)"
+    },
+    {
+      "name": "html_to_pdf",
+      "description": "Convert HTML to PDF"
+    },
+    {
+      "name": "url_to_pdf",
+      "description": "Convert web page URL to PDF"
+    },
+    {
+      "name": "image_to_pdf",
+      "description": "Convert images to PDF"
+    },
+    {
+      "name": "pdf_add_watermark",
+      "description": "Add text watermark/annotation to PDF"
+    },
+    {
+      "name": "pdf_rotate",
+      "description": "Rotate PDF pages"
+    },
+    {
+      "name": "pdf_compress",
+      "description": "Compress PDF file size"
+    },
+    {
+      "name": "pdf_protect",
+      "description": "Add password protection to PDF"
+    },
+    {
+      "name": "pdf_unlock",
+      "description": "Remove password from PDF"
+    },
+    {
+      "name": "barcode_generate",
+      "description": "Generate barcode images"
+    },
+    {
+      "name": "barcode_read",
+      "description": "Read barcodes from images"
+    },
+    {
+      "name": "ocr_pdf",
+      "description": "OCR scanned PDFs to searchable text"
+    }
+  ],
+  "_meta": {
+    "org.mpaktrust": {
+      "mtf_version": "0.1",
+      "permissions": {
+        "filesystem": "none",
+        "network": "outbound",
+        "environment": "read",
+        "subprocess": "none",
+        "native": "none"
       }
     }
   }
