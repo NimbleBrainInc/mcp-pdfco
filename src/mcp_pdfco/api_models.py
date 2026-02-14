@@ -1,12 +1,12 @@
 """Pydantic models for PDF.co API responses."""
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CompressionLevel(str, Enum):
+class CompressionLevel(StrEnum):
     """Enum for PDF compression levels."""
 
     LOW = "low"
@@ -15,14 +15,14 @@ class CompressionLevel(str, Enum):
     EXTREME = "extreme"
 
 
-class Orientation(str, Enum):
+class Orientation(StrEnum):
     """Enum for page orientation."""
 
     PORTRAIT = "Portrait"
     LANDSCAPE = "Landscape"
 
 
-class PageSize(str, Enum):
+class PageSize(StrEnum):
     """Enum for page sizes."""
 
     LETTER = "Letter"
@@ -30,7 +30,7 @@ class PageSize(str, Enum):
     LEGAL = "Legal"
 
 
-class BarcodeType(str, Enum):
+class BarcodeType(StrEnum):
     """Enum for barcode types."""
 
     QRCODE = "QRCode"
@@ -42,7 +42,7 @@ class BarcodeType(str, Enum):
     UPCE = "UPCE"
 
 
-class BarcodeFormat(str, Enum):
+class BarcodeFormat(StrEnum):
     """Enum for barcode output formats."""
 
     PNG = "png"
