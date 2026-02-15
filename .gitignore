@@ -52,3 +52,6 @@ Pipfile.lock
 *.pem
 credentials.json
 .secrets/
+
+deps/
+*.mcpb
