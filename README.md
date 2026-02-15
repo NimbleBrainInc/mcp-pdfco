@@ -25,6 +25,7 @@ watermarks, and security features.
 - **Type Safe**: Full mypy strict mode compliance
 - **Comprehensive Testing**: Unit tests with pytest and AsyncMock
 - **Docker Ready**: Production Dockerfile included
+- **Built-in Skill Resource**: Serves a `skill://pdfco/usage` resource that teaches LLMs HTML best practices, tool selection, and error recovery
 
 ## Available Tools
 

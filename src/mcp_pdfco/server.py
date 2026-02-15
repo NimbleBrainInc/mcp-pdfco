@@ -2,6 +2,7 @@
 
 import json
 import os
+from importlib.resources import files
 
 from fastmcp import Context, FastMCP
 from mcp.types import ContentBlock, ResourceLink, TextContent
@@ -29,7 +30,23 @@ from .api_models import (
 )
 
 # Create MCP server
-mcp = FastMCP("PDFco")
+mcp = FastMCP(
+    "PDFco",
+    instructions=(
+        "Before using PDF.co tools, read the skill://pdfco/usage resource "
+        "for HTML best practices, tool selection, and error recovery."
+    ),
+)
+
+
+SKILL_CONTENT = files("mcp_pdfco").joinpath("SKILL.md").read_text()
+
+
+@mcp.resource("skill://pdfco/usage")
+def pdfco_skill() -> str:
+    """How to effectively use PDF.co tools: HTML-to-PDF best practices, tool selection, error recovery."""
+    return SKILL_CONTENT
+
 
 # Global client instance
 _client: PDFcoClient | None = None
