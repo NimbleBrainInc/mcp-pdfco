@@ -1,0 +1,13 @@
+mcp_pdfco-0.3.0.dist-info/INSTALLER,sha256=5hhM4Q4mYTT9z6QB6PGpUAW81PGNFrYrdXMj4oM_6ak,2
+mcp_pdfco-0.3.0.dist-info/METADATA,sha256=0rv7xakd-rBVZpEm7ZtmZOkpFKC1cxt5g-nOMdfkRwk,11189
+mcp_pdfco-0.3.0.dist-info/RECORD,,
+mcp_pdfco-0.3.0.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+mcp_pdfco-0.3.0.dist-info/WHEEL,sha256=WLgqFyCfm_KASv4WHyYy0P3pM_m7J5L9k2skdKLirC8,87
+mcp_pdfco-0.3.0.dist-info/direct_url.json,sha256=HOS0YJrtgP55SPlbcBDvkf6hupsVuDaVsyeL6y8Pmb4,72
+mcp_pdfco-0.3.0.dist-info/licenses/LICENSE,sha256=k32Ero4k_Gxew1unuPsGSHU53BYEXuPngk3846BXICg,1072
+mcp_pdfco-0.3.0.dist-info/uv_build.json,sha256=RBNvo1WzZ4oRRq0W9-hknpT7T8If536DEMBg9hyq_4o,2
+mcp_pdfco-0.3.0.dist-info/uv_cache.json,sha256=ub6pZu2pU9RO6WdFrWXyaO5_9CP_5H0myzkAU54HR1o,193
+mcp_pdfco/__init__.py,sha256=qWrGyi41DLyZkB5hB3xBxdnGkAlcj05R2y86FskmBfk,229
+mcp_pdfco/api_client.py,sha256=d1Iwd_sGhdWGc3MPMyAWTjUI10gG1K2iFUMGt0qS1UY,16551
+mcp_pdfco/api_models.py,sha256=Rwunb1o8PFrO-SRwO3vzFgxWu4CYbul-u-KqUoIpPcs,11229
+mcp_pdfco/server.py,sha256=FEBRBhFAx6qgQNyhimHrDWITrvn6GtekBRmrVIgw-Y8,16596
