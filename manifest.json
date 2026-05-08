@@ -1,12 +1,13 @@
 {
   "manifest_version": "0.4",
   "name": "@nimblebraininc/pdfco",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "PDF.co MCP Server with comprehensive PDF manipulation and OpenAPI support",
   "author": {
     "name": "NimbleBrain Inc",
     "email": "hello@nimblebrain.ai"
   },
+  "icon": "https://static.nimblebrain.ai/icons/pdfco.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/NimbleBrainInc/mcp-pdfco"
