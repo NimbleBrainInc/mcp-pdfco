@@ -1,7 +1,8 @@
 {
   "manifest_version": "0.4",
   "name": "@nimblebraininc/pdfco",
-  "version": "0.4.2",
+  "display_name": "PDF.co",
+  "version": "0.4.3",
   "description": "PDF.co MCP Server with comprehensive PDF manipulation and OpenAPI support",
   "author": {
     "name": "NimbleBrain Inc",
