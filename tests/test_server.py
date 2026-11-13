@@ -138,7 +138,7 @@ class TestPDFManipulationTools:
             # First content block is ResourceLink
             assert isinstance(result.content[0], ResourceLink)
             assert str(result.content[0].uri) == "http://example.com/merged.pdf"
-            assert result.content[0].mimeType == "application/pdf"
+            assert result.content[0].mime_type == "application/pdf"
             # Second content block is TextContent with metadata
             data = json.loads(result.content[1].text)
             assert data["success"] is True
@@ -255,7 +255,7 @@ class TestConversionTools:
             # First content block is ResourceLink
             assert isinstance(result.content[0], ResourceLink)
             assert str(result.content[0].uri) == "http://example.com/output.pdf"
-            assert result.content[0].mimeType == "application/pdf"
+            assert result.content[0].mime_type == "application/pdf"
             # Second content block is TextContent with metadata
             data = json.loads(result.content[1].text)
             assert data["success"] is True
@@ -334,3 +334,25 @@ class TestSecurityTools:
             data = parse_result(result)
             assert data["error"] is False
             assert data["url"] == "http://example.com/unlocked.pdf"
+
+
+class TestToolErrors:
+    """An upstream API failure reaches the caller as a tool error, not a client log message."""
+
+    @pytest.mark.asyncio
+    async def test_api_error_is_a_tool_error(self):
+        from fastmcp.exceptions import ToolError
+
+        from mcp_pdfco.api_client import PDFcoAPIError
+        from mcp_pdfco.server import mcp
+
+        with patch("mcp_pdfco.server.get_client") as mock_get_client:
+            mock_client = AsyncMock()
+            mock_client.pdf_info.side_effect = PDFcoAPIError(402, "insufficient credits")
+            mock_get_client.return_value = mock_client
+
+            async with Client(mcp) as client:
+                with pytest.raises(
+                    ToolError, match="PDF info retrieval failed: insufficient credits"
+                ):
+                    await client.call_tool("pdf_info", {"url": "https://example.com/a.pdf"})
